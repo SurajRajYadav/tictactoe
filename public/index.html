@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe</title>
+</head>
+<body>
+    <h1>Tic Tac Toe</h1>
+    <div id="board"></div>
+    
+    <script>
+        const ws = new WebSocket('ws://localhost:3000');
+        const boardElem = document.getElementById('board');
+        
+        ws.onmessage = function(event) {
+            const { type, data, currentPlayer } = JSON.parse(event.data);
+            if (type === 'board') {
+                renderBoard(data, currentPlayer);
+            } else if (type === 'winner') {
+                alert(`Player ${data} wins!`);
+                renderBoard(data, currentPlayer);
+            } else if (type === 'draw') {
+                alert('It\'s a draw!');
+                renderBoard(data, currentPlayer);
+            }
+        };
+
+        function renderBoard(board, currentPlayer) {
+            boardElem.innerHTML = '';
+            board.forEach((row, i) => {
+                const rowElem = document.createElement('div');
+                rowElem.className = 'row';
+                row.forEach((cell, j) => {
+                    const cellElem = document.createElement('button');
+                    cellElem.className = 'cell';
+                    cellElem.textContent = cell;
+                    cellElem.onclick = () => {
+                        if (cell === ' ' && currentPlayer === 'X') {
+                            ws.send(JSON.stringify({ type: 'move', data: [i, j] }));
+                        }
+                    };
+                    rowElem.appendChild(cellElem);
+                });
+                boardElem.appendChild(rowElem);
+            });
+        }
+    </script>
+    <style>
+        .row {
+            display: flex;
+        }
+
+        .cell {
+            flex: 1;
+            padding: 20px;
+            font-size: 24px;
+        }
+    </style>
+</body>
+</html>
